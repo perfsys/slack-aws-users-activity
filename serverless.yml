@@ -1,0 +1,53 @@
+service: slack-user-presence-checker
+
+provider:
+  name: aws
+  profile: perfsys
+  runtime: nodejs8.10
+  stage: dev
+  region: eu-west-1
+  environment:
+    APPLICATION_TOKEN: *BEARER-TOKEN*
+    PRESENCE_TABLE: slack-presence-table
+  iamRoleStatements:
+    -
+      Resource:
+        Fn::GetAtt:
+          - SlackPresenceTable
+          - Arn
+      Effect: Allow
+      Action:
+        - dynamodb:PutItem
+
+functions:
+  check-presence:
+    handler: index.handler
+    events:
+      - schedule:
+          description: Checking Slack presence
+          rate: rate(5 minutes)
+          enabled: true
+
+resources:
+  Resources:
+    SlackPresenceTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: dateTime
+            AttributeType: S
+          -
+            AttributeName: slackName
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: dateTime
+            KeyType: HASH
+          -
+            AttributeName: slackName
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.PRESENCE_TABLE}
