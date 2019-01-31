@@ -7,7 +7,7 @@ provider:
   stage: dev
   region: eu-west-1
   environment:
-    APPLICATION_TOKEN: xoxp-18612627121-520720211744-536906015987-492f77db708c883129f45457aa5465d0
+    APPLICATION_TOKEN: xxx
     PRESENCE_TABLE: io.perfsys.serverless.cloud.slack-users-activity-atomic
   iamRoleStatements:
     -
