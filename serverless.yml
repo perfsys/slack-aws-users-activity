@@ -7,7 +7,7 @@ provider:
   stage: dev
   region: eu-west-1
   environment:
-    APPLICATION_TOKEN: xxx
+    APPLICATION_TOKEN: BEARER_TOKEN
     PRESENCE_TABLE: io.perfsys.serverless.cloud.slack-users-activity-atomic
   iamRoleStatements:
     -
@@ -26,6 +26,7 @@ functions:
       - schedule:
           description: Checking Slack presence
           rate: rate(5 minutes)
+#          rate: rate(2 minutes)
           enabled: true
 
 resources:
