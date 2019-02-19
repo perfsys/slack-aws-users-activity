@@ -26,7 +26,6 @@ functions:
       - schedule:
           description: Checking Slack presence
           rate: rate(5 minutes)
-#          rate: rate(2 minutes)
           enabled: true
 
 resources:
