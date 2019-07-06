@@ -4,34 +4,35 @@ const tools = require('./custom-modules/tools.js')
 
 const Tools = tools()
 const DynamoDB = new AWS.DynamoDB.DocumentClient()
-const getData = async function(url, params = null) {
-  if(params === null) params = {requestTimeout: 0, timeoutStep: 500, timeoutLimit: 3000}
-  return new Promise(async function(resolve, reject) {
+const getData = async function (url, params = null) {
+  if (params === null) params = { requestTimeout: 0, timeoutStep: 500, timeoutLimit: 3000 }
+  return new Promise(async function (resolve, reject) {
     try {
       let dataToDB = {}
       let { members, response_metadata } = await Tools.httpsGetRequest(url)
       members.forEach(function (member) {
         if (member.is_bot === false && member.deleted === false && member.name !== 'slackbot') {
           dataToDB[member.name] = {
-             presenceStr: member.presence,
-             presenceInt: member.presence === 'active' ? 1 : 0
+            presenceStr: member.presence,
+            presenceInt: member.presence === 'active' ? 1 : 0
           }
         }
       })
-      if(typeof(response_metadata.next_cursor) === 'string' && response_metadata.next_cursor.length > 0) setTimeout(async function() {
-        Object.assign(dataToDB, await getData(response_metadata.next_cursor, params))
-      }, params.requestTimeout>=params.timeoutLimit?params.requestTimeout:params.requestTimeout+=params.timeoutStep)
+      if (typeof (response_metadata.next_cursor) === 'string' && response_metadata.next_cursor.length > 0) {
+        setTimeout(async function () {
+          Object.assign(dataToDB, await getData(response_metadata.next_cursor, params))
+        }, params.requestTimeout >= params.timeoutLimit ? params.requestTimeout : params.requestTimeout += params.timeoutStep)
+      }
       resolve(dataToDB)
-    }
-    catch(err) {
+    } catch (err) {
       reject(err)
     }
   })
 }
-const dynamoPut = function(params) {
-  return new Promise(function(resolve, rejects) {
-    DynamoDB.put(params, function(err, data) {
-      if(err !== null) reject(err)
+const dynamoPut = function (params) {
+  return new Promise(function (resolve, rejects) {
+    DynamoDB.put(params, function (err, data) {
+      if (err !== null) reject(err)
       else resolve(data)
     })
   })
