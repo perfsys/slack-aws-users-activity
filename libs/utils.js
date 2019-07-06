@@ -1,4 +1,4 @@
-const Tools = function () {
+const Utils = function () {
   this.httpsGetRequest = function (url) {
     const https = require('https')
     return new Promise(function (resolve, reject) {
@@ -12,4 +12,4 @@ const Tools = function () {
   }
 }
 
-module.exports = function () { return new Tools() }
+module.exports = function () { return new Utils() }

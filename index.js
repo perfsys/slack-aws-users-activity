@@ -1,15 +1,15 @@
 'use strict'
 const AWS = require('aws-sdk')
-const tools = require('./custom-modules/tools.js')
+const utils = require('./libs/utils.js')
 
-const Tools = tools()
+const Utils = utils()
 const DynamoDB = new AWS.DynamoDB.DocumentClient()
 const getData = async function (url, params = null) {
   if (params === null) params = { requestTimeout: 0, timeoutStep: 500, timeoutLimit: 3000 }
   return new Promise(async function (resolve, reject) {
     try {
       let dataToDB = {}
-      let { members, response_metadata } = await Tools.httpsGetRequest(url)
+      let { members, response_metadata } = await Utils.httpsGetRequest(url)
       members.forEach(function (member) {
         if (member.is_bot === false && member.deleted === false && member.name !== 'slackbot') {
           dataToDB[member.name] = {
