@@ -3,7 +3,7 @@ service: perfsys-slack-aws-users-activity
 provider:
   name: aws
   profile: perfsys
-  runtime: nodejs8.10
+  runtime: nodejs10.x
   stage: dev
   region: eu-west-1
   environment:
@@ -21,7 +21,7 @@ provider:
 
 functions:
   check-presence:
-    handler: index.handler
+    handler: collect-atomic.handler
     events:
       - schedule:
           description: Checking Slack presence

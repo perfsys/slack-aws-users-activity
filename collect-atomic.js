@@ -5,6 +5,7 @@ const utils = require('./libs/utils.js')
 const Utils = utils()
 const DynamoDB = new AWS.DynamoDB.DocumentClient()
 const getData = async function (url, params = null) {
+  console.log(`[getData] url: ${url}`)
   if (params === null) params = { requestTimeout: 0, timeoutStep: 500, timeoutLimit: 3000 }
   return new Promise(async function (resolve, reject) {
     try {
@@ -23,6 +24,8 @@ const getData = async function (url, params = null) {
           Object.assign(dataToDB, await getData(response_metadata.next_cursor, params))
         }, params.requestTimeout >= params.timeoutLimit ? params.requestTimeout : params.requestTimeout += params.timeoutStep)
       }
+
+      console.log(`[getData] dataToDB: ${JSON.stringify(dataToDB)}`)
       resolve(dataToDB)
     } catch (err) {
       reject(err)
@@ -43,8 +46,9 @@ module.exports.handler = async function (event, context, callback) {
     let dataToDB = await getData('https://slack.com/api/users.list?token=' + process.env.APPLICATION_TOKEN + '&presence=true')
     dataToDB.dateTime = (new Date()).toISOString()
     let response = await dynamoPut({ TableName: process.env.PRESENCE_TABLE, Item: dataToDB })
-    console.log('Presence cut was successfully recorded.\n' + JSON.stringify(response))
+    console.log('Results were successfully saved.\n' + JSON.stringify(response))
+    return dataToDB;
   } catch (err) {
-    console.log('An error occured while recording presence cut:\n' + JSON.stringify(err))
+    console.log('An error occurred while recording presence cut:\n' + JSON.stringify(err))
   }
 }
