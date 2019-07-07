@@ -1,6 +1,7 @@
 {
   "dependencies": {
-    "aws-sdk": "^2.395.0"
+    "aws-sdk": "^2.395.0",
+    "ramda": "^0.26.1"
   },
   "devDependencies": {
     "eslint": "^5.12.1",

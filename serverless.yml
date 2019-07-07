@@ -27,6 +27,8 @@ functions:
           description: Checking Slack presence
           rate: rate(5 minutes)
           enabled: true
+  daily-statistics:
+    handler: daily-statistics.handler
 
 resources:
   Resources:
