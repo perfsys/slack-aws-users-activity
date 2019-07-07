@@ -32,20 +32,15 @@ const getData = async function (url, params = null) {
     }
   })
 }
-const dynamoPut = function (params) {
-  return new Promise(function (resolve, rejects) {
-    DynamoDB.put(params, function (err, data) {
-      if (err !== null) reject(err)
-      else resolve(data)
-    })
-  })
-}
+
+
 
 module.exports.handler = async function (event, context, callback) {
   // try {
     let dataToDB = await getData('https://slack.com/api/users.list?token=' + process.env.APPLICATION_TOKEN + '&presence=true')
     dataToDB.dateTime = (new Date()).toISOString()
-    let response = await dynamoPut({ TableName: process.env.PRESENCE_TABLE, Item: dataToDB })
+
+    let response = await DynamoDB.put({ TableName: process.env.PRESENCE_TABLE, Item: dataToDB }).promise()
     console.log('Results were successfully saved.\n' + JSON.stringify(response))
     return dataToDB;
   // } catch (err) {
