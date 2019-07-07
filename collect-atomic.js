@@ -42,13 +42,14 @@ const dynamoPut = function (params) {
 }
 
 module.exports.handler = async function (event, context, callback) {
-  try {
+  // try {
     let dataToDB = await getData('https://slack.com/api/users.list?token=' + process.env.APPLICATION_TOKEN + '&presence=true')
     dataToDB.dateTime = (new Date()).toISOString()
     let response = await dynamoPut({ TableName: process.env.PRESENCE_TABLE, Item: dataToDB })
     console.log('Results were successfully saved.\n' + JSON.stringify(response))
     return dataToDB;
-  } catch (err) {
-    console.log('An error occurred while recording presence cut:\n' + JSON.stringify(err))
-  }
+  // } catch (err) {
+  //   console.log('An error occurred while recording presence cut:\n' + JSON.stringify(err))
+  //   return new Error('Collect atomic failed')
+  // }
 }
