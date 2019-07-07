@@ -8,7 +8,7 @@ const R = require('ramda');
 
 
 module.exports.handler = async function (event, context, callback) {
-    try {
+    // try {
         console.log(`Going to calculate daily statistics from: ${PRESENCE_TABLE}`)
 
         var params = {
@@ -26,10 +26,10 @@ module.exports.handler = async function (event, context, callback) {
 
 
 
-    }catch (e) {
-
-        console.log(`error: ${e}`)
-    }
+    // }catch (e) {
+    //
+    //     console.log(`error: ${e}`)
+    // }
 
 
 }
