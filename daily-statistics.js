@@ -2,6 +2,7 @@
 const AWS = require('aws-sdk')
 const PRESENCE_TABLE = process.env.PRESENCE_TABLE
 const documentClient = new AWS.DynamoDB.DocumentClient()
+const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 const R = require('ramda')
 const moment = require('moment')
 
@@ -15,14 +16,14 @@ module.exports.handler = async function (event, context, callback) {
     // Select: 'COUNT',
     // Limit: 10
     //      TODO probaly need to apply scan filter
-    ScanFilter: {
-      'dateTime': {
-        ComparisonOperator: 'GT',
-        AttributeValueList: [
-          '2019-07-00T00:00:00.000Z'
-        ]
-      }
-    }
+    // ScanFilter: {
+    //   'dateTime': {
+    //     ComparisonOperator: 'GT',
+    //     AttributeValueList: [
+    //       '2019-07-00T00:00:00.000Z'
+    //     ]
+    //   }
+    // }
   }
 
   const dateTime = R.prop('dateTime')
@@ -172,6 +173,23 @@ module.exports.handler = async function (event, context, callback) {
         R.map((i) => R.assoc(i, dailyStatistics(R.prop(i, groupedByDayObj)), {})),
         R.mergeAll
       )(days)
+
+  const saveJsonToS3 = async (json)=>{
+
+    const STATISTICS_DAILY_JSON_S3_NAME = process.env.STATISTICS_DAILY_JSON_S3_NAME
+
+    var params = {
+      Bucket: STATISTICS_DAILY_JSON_S3_NAME,
+      Key: `statistics-daily-${moment().format()}.json`,
+      Body: JSON.stringify(
+          json
+          , null, 1)};
+    // var options = {partSize: 10 * 1024 * 1024, queueSize: 1};
+    await s3.upload(params).promise()
+
+  }
+
+  await saveJsonToS3(statisticsAll)
 
   console.log(JSON.stringify(
     statisticsAll

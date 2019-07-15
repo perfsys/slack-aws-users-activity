@@ -9,6 +9,7 @@ provider:
   environment:
     APPLICATION_TOKEN: BEARER_TOKEN
     PRESENCE_TABLE: io.perfsys.serverless.cloud.slack-users-activity-atomic
+    STATISTICS_DAILY_JSON_S3_NAME: 'io.perfsys.serverless.cloud.slack-users-statistics-daily-json'
   iamRoleStatements:
     -
       Resource:
@@ -18,17 +19,38 @@ provider:
       Effect: Allow
       Action:
         - dynamodb:PutItem
+        - dynamodb:Scan
+
+    - Effect: "Allow"
+      Action:
+        - "s3:PutObject"
+      Resource:
+        "Fn::Join":
+          - ''
+          -
+            - { "Fn::GetAtt": ["StatisticsDailyJSONS3Bucket", "Arn" ] }
+            - '/*'
 
 functions:
   check-presence:
     handler: collect-atomic.handler
     events:
       - schedule:
+          name: slack-aws-users-check-presence-rate-event
           description: Checking Slack presence
           rate: rate(5 minutes)
           enabled: true
   daily-statistics:
     handler: daily-statistics.handler
+    timeout: 120
+    events:
+      - schedule:
+          name: slack-aws-users-statistics-daily-json-rate-event
+          description: Save Statistics Daily JSON
+#          rate: rate(1 day)
+#           TODO should be once a day
+          rate: rate(2 hours)
+          enabled: true
 
 resources:
   Resources:
@@ -48,3 +70,9 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         TableName: ${self:provider.environment.PRESENCE_TABLE}
+
+    StatisticsDailyJSONS3Bucket:
+      #      DeletionPolicy: Delete
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.STATISTICS_DAILY_JSON_S3_NAME}
