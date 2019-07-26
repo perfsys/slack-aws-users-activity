@@ -2,7 +2,7 @@
 const AWS = require('aws-sdk')
 const PRESENCE_TABLE = process.env.PRESENCE_TABLE
 const documentClient = new AWS.DynamoDB.DocumentClient()
-const s3 = new AWS.S3({apiVersion: '2006-03-01'});
+const s3 = new AWS.S3({ apiVersion: '2006-03-01' })
 const R = require('ramda')
 const moment = require('moment')
 
@@ -43,7 +43,7 @@ module.exports.handler = async function (event, context, callback) {
 
     if (data.LastEvaluatedKey) {
       params.ExclusiveStartKey = data.LastEvaluatedKey
-      return await getAllData(params)
+      return getAllData(params)
     } else {
       return data
     }
@@ -58,7 +58,8 @@ module.exports.handler = async function (event, context, callback) {
   console.log(`Items: ${R.length(allData)}`)
 
   // Will add `day` field to every item in the result array
-  const assocDayField = (item) => R.assoc('day', moment(dateTime(item)).format('YYYY-MM-DD'), item)
+  // const assocDayField = (item) => R.assoc('day', moment(dateTime(item)).format('YYYY-MM-DD'), item)
+  const assocDayField = (item) => R.assoc('day', dateTime(item).split('T')[0], item)
 
   // Group all the data by `day` field
   const groupedByDayObj = R.pipe(
@@ -114,7 +115,7 @@ module.exports.handler = async function (event, context, callback) {
                           )(dayValuesArray)
               }
 
-    const { firstAppear } = calculated
+    const { firstAppear, online, offline } = calculated
 
     const firstAppearMoment = moment(firstAppear)
 
@@ -140,12 +141,28 @@ module.exports.handler = async function (event, context, callback) {
       .startOf('day')
       .hours(12)
 
+    const firstAppearAfter14am = R.clone(firstAppearMoment)
+    firstAppearAfter14am
+      .utc()
+      .startOf('day')
+      .hours(14)
+
+    const firstAppearAfter16am = R.clone(firstAppearMoment)
+    firstAppearAfter16am
+      .utc()
+      .startOf('day')
+      .hours(16)
+
     const isBefore = (v) => ((firstAppear) ? firstAppearMoment.isBefore(v) : false) | 0
+    const isAfter = (v) => ((firstAppear) ? firstAppearMoment.isAfter(v) : false) | 0
 
     return R.pipe(
       R.assoc('firstAppearBefore8am', isBefore(firstAppearBefore8am)),
       R.assoc('firstAppearBefore10am', isBefore(firstAppearBefore10am)),
-      R.assoc('firstAppearBefore12am', isBefore(firstAppearBefore12am))
+      R.assoc('firstAppearBefore12am', isBefore(firstAppearBefore12am)),
+      R.assoc('firstAppearAfter14am', isAfter(firstAppearAfter14am)),
+      R.assoc('firstAppearAfter16am', isAfter(firstAppearAfter16am)),
+      R.assoc('percentageOnline', Number((Math.round(online / (online + offline) * 100) / 100).toFixed(2)))
     )(calculated)
   }
 
@@ -174,19 +191,17 @@ module.exports.handler = async function (event, context, callback) {
         R.mergeAll
       )(days)
 
-  const saveJsonToS3 = async (json)=>{
-
+  const saveJsonToS3 = async (json) => {
     const STATISTICS_DAILY_JSON_S3_NAME = process.env.STATISTICS_DAILY_JSON_S3_NAME
 
     var params = {
       Bucket: STATISTICS_DAILY_JSON_S3_NAME,
       Key: `statistics-daily-${moment().format()}.json`,
       Body: JSON.stringify(
-          json
-          , null, 1)};
+        json
+        , null, 1) }
     // var options = {partSize: 10 * 1024 * 1024, queueSize: 1};
     await s3.upload(params).promise()
-
   }
 
   await saveJsonToS3(statisticsAll)
