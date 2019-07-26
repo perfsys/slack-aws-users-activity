@@ -197,7 +197,7 @@ module.exports.handler = async function (event, context, callback) {
 
     var params = {
       Bucket: STATISTICS_DAILY_JSON_S3_NAME,
-      Key: `statistics-daily-${moment().format()}.json`,
+      Key: `statistics-daily-v2-${moment().format()}.json`,
       Body: JSON.stringify(
         json
         , null, 1) }
