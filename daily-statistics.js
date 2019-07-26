@@ -162,7 +162,8 @@ module.exports.handler = async function (event, context, callback) {
       R.assoc('firstAppearBefore12am', isBefore(firstAppearBefore12am)),
       R.assoc('firstAppearAfter14am', isAfter(firstAppearAfter14am)),
       R.assoc('firstAppearAfter16am', isAfter(firstAppearAfter16am)),
-      R.assoc('percentageOnline', Number((Math.round(online / (online + offline) * 100) / 100).toFixed(2)))
+      R.assoc('percentageOnline', Number((Math.round(online / (online + offline) * 100) / 100).toFixed(2))),
+      R.assoc('weekDay', (firstAppear) ? firstAppearMoment.format('ddd') : null)
     )(calculated)
   }
 
