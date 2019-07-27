@@ -10,6 +10,7 @@ provider:
     APPLICATION_TOKEN: BEARER_TOKEN
     PRESENCE_TABLE: io.perfsys.serverless.cloud.slack-users-activity-atomic
     STATISTICS_DAILY_JSON_S3_NAME: 'io.perfsys.serverless.cloud.slack-users-statistics-daily-json'
+    STATISTICS_DAILY_CSV_S3_NAME: 'io.perfsys.serverless.cloud.slack-users-statistics-daily-csv'
   iamRoleStatements:
     -
       Resource:
@@ -29,6 +30,16 @@ provider:
           - ''
           -
             - { "Fn::GetAtt": ["StatisticsDailyJSONS3Bucket", "Arn" ] }
+            - '/*'
+
+    - Effect: "Allow"
+      Action:
+        - "s3:PutObject"
+      Resource:
+        "Fn::Join":
+          - ''
+          -
+            - { "Fn::GetAtt": ["StatisticsDailyCSVS3Bucket", "Arn" ] }
             - '/*'
 
 functions:
@@ -51,6 +62,9 @@ functions:
 #           TODO should be once a day
           rate: rate(2 hours)
           enabled: true
+
+  csv-export:
+    handler: csv-export.handler
 
 resources:
   Resources:
@@ -76,3 +90,9 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:provider.environment.STATISTICS_DAILY_JSON_S3_NAME}
+
+    StatisticsDailyCSVS3Bucket:
+      #      DeletionPolicy: Delete
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.STATISTICS_DAILY_CSV_S3_NAME}
