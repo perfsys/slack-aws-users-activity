@@ -56,7 +56,7 @@ module.exports.handler = async function (event, context, callback) {
         //
         online: '_10_online',
         offline: '_11_offline',
-        percentageOnline: '_12_offline',
+        percentageOnline: '_12_percentageOnline',
         //
         firstAppearBefore8am: '_20_firstAppearBefore8am',
         firstAppearBefore10am: '_21_firstAppearBefore10am',
@@ -116,7 +116,11 @@ module.exports.handler = async function (event, context, callback) {
     ,null,1))
 
 
+    const saveResult = await saveCsvStream(toCSVStream(result))
 
+    console.log(JSON.stringify(
+        saveResult
+        ,null,1))
 
 
 }
