@@ -24,7 +24,7 @@ provider:
 
     - Effect: "Allow"
       Action:
-        - "s3:PutObject"
+        - "s3:*"
       Resource:
         "Fn::Join":
           - ''
@@ -34,7 +34,7 @@ provider:
 
     - Effect: "Allow"
       Action:
-        - "s3:PutObject"
+        - "s3:*"
       Resource:
         "Fn::Join":
           - ''
@@ -60,11 +60,22 @@ functions:
           description: Save Statistics Daily JSON
 #          rate: rate(1 day)
 #           TODO should be once a day
-          rate: rate(2 hours)
+          rate: rate(6 hours)
           enabled: true
 
   csv-export:
     handler: csv-export.handler
+    events:
+#      - s3:
+#         bucket: ${self:provider.environment.STATISTICS_DAILY_JSON_S3_NAME}
+#         event: s3:ObjectCreated:*
+      - schedule:
+          name: slack-aws-users-statistics-daily-csv-rate-event
+          description: Save Statistics Daily CSV
+          #          rate: rate(1 day)
+          #           TODO should be once a day
+          rate: rate(12 hours)
+          enabled: true
 
 resources:
   Resources:

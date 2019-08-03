@@ -12,7 +12,7 @@ module.exports.handler = async function (event, context, callback) {
 
   // Scan params for DDB.
   var params = {
-    TableName: PRESENCE_TABLE,
+    TableName: PRESENCE_TABLE
     // Select: 'COUNT',
     // Limit: 10
     //      TODO probaly need to apply scan filter
@@ -195,14 +195,23 @@ module.exports.handler = async function (event, context, callback) {
   const saveJsonToS3 = async (json) => {
     const STATISTICS_DAILY_JSON_S3_NAME = process.env.STATISTICS_DAILY_JSON_S3_NAME
 
+    const FileName = `statistics-daily-v2-${moment().format()}.json`
+
     var params = {
       Bucket: STATISTICS_DAILY_JSON_S3_NAME,
-      Key: `statistics-daily-v2-${moment().format()}.json`,
+      Key: FileName,
       Body: JSON.stringify(
         json
         , null, 1) }
     // var options = {partSize: 10 * 1024 * 1024, queueSize: 1};
     await s3.upload(params).promise()
+
+    // latest.json
+    await s3.copyObject({
+      Bucket: STATISTICS_DAILY_JSON_S3_NAME,
+      CopySource: `/${STATISTICS_DAILY_JSON_S3_NAME}/${encodeURIComponent(FileName)}`,
+      Key: 'latest.json'
+    }).promise()
   }
 
   await saveJsonToS3(statisticsAll)
