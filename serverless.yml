@@ -101,9 +101,19 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:provider.environment.STATISTICS_DAILY_JSON_S3_NAME}
+        LifecycleConfiguration:
+          Rules:
+            -
+              ExpirationInDays: 7
+              Status: Enabled
 
     StatisticsDailyCSVS3Bucket:
       #      DeletionPolicy: Delete
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:provider.environment.STATISTICS_DAILY_CSV_S3_NAME}
+        LifecycleConfiguration:
+          Rules:
+            -
+              ExpirationInDays: 7
+              Status: Enabled
