@@ -3,12 +3,14 @@ service: perfsys-slack-aws-users-activity
 provider:
   name: aws
   profile: perfsys
-  runtime: nodejs8.10
+  runtime: nodejs10.x
   stage: dev
   region: eu-west-1
   environment:
     APPLICATION_TOKEN: BEARER_TOKEN
     PRESENCE_TABLE: io.perfsys.serverless.cloud.slack-users-activity-atomic
+    STATISTICS_DAILY_JSON_S3_NAME: 'io.perfsys.serverless.cloud.slack-users-statistics-daily-json'
+    STATISTICS_DAILY_CSV_S3_NAME: 'io.perfsys.serverless.cloud.slack-users-statistics-daily-csv'
   iamRoleStatements:
     -
       Resource:
@@ -18,14 +20,61 @@ provider:
       Effect: Allow
       Action:
         - dynamodb:PutItem
+        - dynamodb:Scan
+
+    - Effect: "Allow"
+      Action:
+        - "s3:*"
+      Resource:
+        "Fn::Join":
+          - ''
+          -
+            - { "Fn::GetAtt": ["StatisticsDailyJSONS3Bucket", "Arn" ] }
+            - '/*'
+
+    - Effect: "Allow"
+      Action:
+        - "s3:*"
+      Resource:
+        "Fn::Join":
+          - ''
+          -
+            - { "Fn::GetAtt": ["StatisticsDailyCSVS3Bucket", "Arn" ] }
+            - '/*'
 
 functions:
   check-presence:
-    handler: index.handler
+    handler: collect-atomic.handler
     events:
       - schedule:
+          name: slack-aws-users-check-presence-rate-event
           description: Checking Slack presence
           rate: rate(5 minutes)
+          enabled: true
+  daily-statistics:
+    handler: daily-statistics.handler
+    timeout: 120
+    events:
+      - schedule:
+          name: slack-aws-users-statistics-daily-json-rate-event
+          description: Save Statistics Daily JSON
+#          rate: rate(1 day)
+#           TODO should be once a day
+          rate: rate(6 hours)
+          enabled: true
+
+  csv-export:
+    handler: csv-export.handler
+    events:
+#      - s3:
+#         bucket: ${self:provider.environment.STATISTICS_DAILY_JSON_S3_NAME}
+#         event: s3:ObjectCreated:*
+      - schedule:
+          name: slack-aws-users-statistics-daily-csv-rate-event
+          description: Save Statistics Daily CSV
+          #          rate: rate(1 day)
+          #           TODO should be once a day
+          rate: rate(12 hours)
           enabled: true
 
 resources:
@@ -46,3 +95,25 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         TableName: ${self:provider.environment.PRESENCE_TABLE}
+
+    StatisticsDailyJSONS3Bucket:
+      #      DeletionPolicy: Delete
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.STATISTICS_DAILY_JSON_S3_NAME}
+        LifecycleConfiguration:
+          Rules:
+            -
+              ExpirationInDays: 7
+              Status: Enabled
+
+    StatisticsDailyCSVS3Bucket:
+      #      DeletionPolicy: Delete
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.STATISTICS_DAILY_CSV_S3_NAME}
+        LifecycleConfiguration:
+          Rules:
+            -
+              ExpirationInDays: 7
+              Status: Enabled
