@@ -119,69 +119,6 @@ resources:
               Status: Enabled
 
 
-# TODO this has to be ported to N.Virginia region. And probable should be out of Serverless framework
-    AthenaNamedQueryStatisticsLatestTable:
-      Type: AWS::Athena::NamedQuery
-      Properties:
-#        TODO need to create DB manualy perfsys_slack_users_activity. CREATE DATABASE `perfsys_slack_users_activity`
-        Database: "perfsys_slack_users_activity"
-        Name: "io_perfsys_serverless_users_activity_table"
-#        TODO `_04_firstAppear` string.  timestamp type does not work ((
-        QueryString: >
-          CREATE EXTERNAL TABLE IF NOT EXISTS perfsys_slack_users_activity.io_perfsys_serverless_users_activity_table (
-
-          `_01_day` date,
-          `_02_weekDay` string,
-          `_03_user` string,
-          `_04_firstAppear` string,
-          `_05_lastSeen` string,
-          `_10_online` int,
-          `_11_offline` int,
-          `_12_percentageOnline` float,
-          `_20_firstAppearBefore8am` int,
-          `_21_firstAppearBefore10am` int,
-          `_22_firstAppearBefore12am` int,
-          `_23_firstAppearAfter14am` int,
-          `_24_firstAppearAfter16am` int
-
-          )
-          ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'
-          WITH SERDEPROPERTIES (
-            'serialization.format' = ',',
-            'field.delim' = ','
-          ) LOCATION 's3://io.perfsys.serverless.cloud.slack-users-statistics-daily-csv/'
-          TBLPROPERTIES ('skip.header.line.count'='1', 'has_encrypted_data'='false');
-
-    AthenaNamedQueryStatisticsLatestView:
-      Type: AWS::Athena::NamedQuery
-      Properties:
-        Database: "perfsys_slack_users_activity"
-        Name: "io_perfsys_serverless_users_activity_view"
-        QueryString: >
-          CREATE OR REPLACE VIEW io_perfsys_serverless_users_activity_view AS
-          SELECT
-          "_01_day"
-          , "_02_weekDay"
-          , "_03_user"
-          , "_04_firstAppear"
-          , "_05_lastSeen"
-          , "_10_online"
-          , "_11_offline"
-          , "_12_percentageOnline"
-          , "_20_firstAppearBefore8am"
-          , "_21_firstAppearBefore10am"
-          , "_22_firstAppearBefore12am"
-          , "_23_firstAppearAfter14am"
-          , "_24_firstAppearAfter16am"
-          , ("_10_online" + "_11_offline") "_99_total"
-          , IF(((IF(("_12_percentageOnline" <= 0.15), 1, 0) + "_23_firstAppearAfter14am") > 0), 1, 0) "_97_dayoff"
-          , IF(("_12_percentageOnline" <= 0.15), 1, 0) "_98_lowonline"
-          , "date_format"("_01_day", '%Y-%m') "_96_month"
-          , "date_format"("_01_day", '%W') "_80_weekDayFull"
-          FROM
-          perfsys_slack_users_activity.io_perfsys_serverless_users_activity_table;
-
-
 
 
 
