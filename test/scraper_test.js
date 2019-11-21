@@ -5,6 +5,8 @@ describe('scraper tests',()=>{
 
     it('getDataTest', async function() {
 
+        // TODO need to export ENV
+        // export APPLICATION_TOKEN=xoxp-XXXXXXX
         const APPLICATION_TOKEN = process.env.APPLICATION_TOKEN
         const {getData} = require('../libs/scraper')
         const data = await getData(`https://slack.com/api/users.list?token=${APPLICATION_TOKEN}&presence=true`)
