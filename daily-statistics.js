@@ -6,6 +6,8 @@ const s3 = new AWS.S3({ apiVersion: '2006-03-01' })
 const R = require('ramda')
 const moment = require('moment')
 
+const { isEmptyDay } = require('./libs/is-empty-day')
+
 module.exports.handler = async function (event, context, callback) {
   // try {
   console.log(`Going to calculate daily statistics from: ${PRESENCE_TABLE}`)
@@ -185,10 +187,13 @@ module.exports.handler = async function (event, context, callback) {
     )(usersInADaySet)
   }
 
-  // Final statistics. Replaing day with dailyStastics
+  // Final statistics. Replacing day with dailyStastics
   const statisticsAll =
       R.pipe(
         R.map((i) => R.assoc(i, dailyStatistics(R.prop(i, groupedByDayObj)), {})),
+        // R.takeLast(5),
+        // Filter fully empty days. Days when all the members have 0
+        R.filter(R.pipe(isEmptyDay, R.not)),
         R.mergeAll
       )(days)
 

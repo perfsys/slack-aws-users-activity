@@ -1,5 +1,15 @@
 module.exports = {
-    "extends": "standard",
+    "env": {
+        "mocha": true
+    },
+    "plugins": [
+        "mocha"
+    ],
+    // "extends": "standard",
+    "extends": [
+        "standard",
+        "plugin:mocha/recommended"
+    ],
     rules: {
         'no-alert': 'error',
         // allow async-await
