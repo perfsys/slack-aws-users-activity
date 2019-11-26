@@ -1,11 +1,16 @@
 'use strict'
 const AWS = require('aws-sdk')
-const { getData } = require('./libs/scraper')
+const { getUsers, getUsersPresence } = require('./libs/scraper')
 const DynamoDB = new AWS.DynamoDB.DocumentClient()
+
+const APPLICATION_TOKEN = process.env.APPLICATION_TOKEN
 
 module.exports.handler = async function (event, context, callback) {
   // try {
-  let dataToDB = await getData('https://slack.com/api/users.list?token=' + process.env.APPLICATION_TOKEN + '&presence=true')
+
+  const users = await getUsers(APPLICATION_TOKEN)
+  let dataToDB = await getUsersPresence(APPLICATION_TOKEN, users)
+
   dataToDB.dateTime = (new Date()).toISOString()
 
   let response = await DynamoDB.put({ TableName: process.env.PRESENCE_TABLE, Item: dataToDB }).promise()
