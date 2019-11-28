@@ -7,6 +7,7 @@ const R = require('ramda')
 const moment = require('moment')
 
 const { isEmptyDay } = require('./libs/is-empty-day')
+const { findMaximumDaily } = require('./libs/maximum-per-day')
 
 module.exports.handler = async function (event, context, callback) {
   // try {
@@ -194,6 +195,8 @@ module.exports.handler = async function (event, context, callback) {
         // R.takeLast(5),
         // Filter fully empty days. Days when all the members have 0
         R.filter(R.pipe(isEmptyDay, R.not)),
+        // Adding _maximumDaily user to day object
+        R.map(findMaximumDaily),
         R.mergeAll
       )(days)
 
